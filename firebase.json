@@ -3,7 +3,7 @@
     "providers": {
       "googleSignIn": {
         "oAuthBrandDisplayName": "EchoLogic",
-        "supportEmail": "aliarkhamnight2019@gmail.com"
+        "supportEmail": "support@echologic.com"
       }
     }
   },
