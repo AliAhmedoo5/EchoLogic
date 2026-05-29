@@ -1,0 +1,34 @@
+# Android & Gradle
+.gradle/
+build/
+/build/
+/captures/
+.DS_Store
+.idea/
+*.iml
+local.properties
+.gradle
+
+# Keystores & sensitive credentials (MUST NEVER PUSH)
+*.jks
+*.keystore
+google-services.json
+app/google-services.json
+app/keystore.jks
+
+# Kotlin & Java
+*.class
+*.jar
+*.war
+*.hprof
+
+# Environment & local config
+.env*
+*.log
+*.txt
+scratch/
+.vscode/
+
+# Ignore cert files
+cert.txt
+filelist.txt
