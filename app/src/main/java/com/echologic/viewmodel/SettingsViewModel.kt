@@ -144,12 +144,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private val _isUploading = MutableStateFlow(false)
-    val isUploading: StateFlow<Boolean> = _isUploading
-
-    private val _uploadError = MutableStateFlow<String?>(null)
-    val uploadError: StateFlow<String?> = _uploadError
-
     val availableCategories: StateFlow<List<String>> = settingsRepository.availableCategories
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -177,25 +171,6 @@ class SettingsViewModel @Inject constructor(
             current.add(category)
         }
         settingsRepository.setSelectedCategories(current)
-    }
-
-    fun uploadDataToCloud(onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            _isUploading.value = true
-            _uploadError.value = null
-            try {
-                repository.uploadSeededQuotesToFirestore()
-                onSuccess()
-            } catch (e: Exception) {
-                _uploadError.value = e.message ?: "Unknown error"
-            } finally {
-                _isUploading.value = false
-            }
-        }
-    }
-
-    fun clearError() {
-        _uploadError.value = null
     }
 
     fun submitQuote(text: String, author: String, category: String, onComplete: (Boolean) -> Unit) {

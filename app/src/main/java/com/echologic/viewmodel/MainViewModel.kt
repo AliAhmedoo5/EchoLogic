@@ -31,12 +31,6 @@ class MainViewModel @Inject constructor(
     private val _showHeart = MutableStateFlow(false)
     val showHeart: StateFlow<Boolean> = _showHeart
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    private val _refreshCount = MutableStateFlow(0)
-    val refreshCount: StateFlow<Int> = _refreshCount
-
     val isPremium: StateFlow<Boolean> = settingsRepository.isPremium
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -48,7 +42,6 @@ class MainViewModel @Inject constructor(
             repository.ensureSeeded()
             
             // Local-First: Load first quote immediately
-            _isLoading.value = false
             fetchNewQuote()
 
             // Observe category changes to immediately refresh if current quote is invalid
@@ -99,7 +92,6 @@ class MainViewModel @Inject constructor(
 
             if (quote != null) {
                 _currentQuote.value = quote
-                _refreshCount.value++
                 
                 recentQuoteIds.add(quote.id)
                 if (recentQuoteIds.size > 20) {

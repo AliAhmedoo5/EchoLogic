@@ -47,12 +47,6 @@ interface QuoteDao {
     @Query("SELECT COUNT(*) FROM quotes")
     suspend fun getQuoteCount(): Int
 
-    @Query("SELECT id FROM quotes WHERE isFavorited = 1")
-    suspend fun getFavoritedIds(): List<String>
-
-    @Query("UPDATE quotes SET isFavorited = 1 WHERE id IN (:ids)")
-    suspend fun setFavoritesByIds(ids: List<String>)
-
     @Query("UPDATE quotes SET isFavorited = 0")
     suspend fun resetAllFavorites()
 }
