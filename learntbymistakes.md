@@ -85,7 +85,32 @@ AnimatedContent(
 
 ---
 
+## 7. Remote CI/CD Failure: Missing Gradle Wrapper & Credentials (CI/CD)
+### Symptom
+Remote GitHub Actions workflow fails almost immediately (~7s) with `exit code 1` during `./gradlew assembleRelease` because Java cannot find `GradleWrapperMain`, or fails because `google-services.json`/`keystore.jks` is missing.
+### Root Cause
+1. Standard `.gitignore` rules exclude `*.jar`, which accidentally excludes `gradle/wrapper/gradle-wrapper.jar`.
+2. `.gitignore` securely excludes local `google-services.json` and keystores (`*.jks`). Fresh CI runners checking out the repo have neither the wrapper jar nor required build credentials.
+### The Fix
+1. Explicitly allow the Gradle wrapper jar (`!gradle/wrapper/gradle-wrapper.jar`) in `.gitignore` and commit `gradle-wrapper.jar`.
+2. Add self-healing steps inside `.github/workflows/*.yml` before running `./gradlew` to inject repository secrets or auto-generate valid placeholder JSON and temporary keystores (`keytool -genkey ...`) so builds never fail due to missing local files.
+
+---
+
+## 8. YAML Block Scalar vs. Bash Heredoc Indentation Syntax Trap (CI/CD & YAML)
+### Symptom
+`Invalid workflow file: .github/workflows/android-release.yml#L78 - You have an error in your yaml syntax on line 78`.
+### Root Cause
+Inside YAML block literals (`run: |`), all lines must be indented past `run:`. However, writing a multi-line Bash heredoc (`cat << 'EOF' > file`) requires the closing `EOF` tag at column 0 (unindented). Placing `EOF` at column 0 breaks YAML parsing, while indenting `EOF` breaks Bash heredoc parsing.
+### The Fix
+**Always** use single-line `echo '{"key":"value"}' > file` commands or single-line strings inside YAML workflow blocks when creating JSON or configuration files, completely eliminating indentation conflicts.
+
+---
+
 ## Critical Checkpoints for Future Models:
 1. **Never** use wildcard imports in UI code.
 2. **Never** assume Firebase is auto-initialized if using Hilt Singletons.
 3. **Always** check `attachBaseContext` if the app crashes before entering `MainActivity`.
+4. **Never** assume `gradle-wrapper.jar` is committed when setting up remote CI/CD; verify `.gitignore` exceptions (`!gradle/wrapper/gradle-wrapper.jar`).
+5. **Always** add self-healing credential/keystore checks in CI workflows (`android-release.yml`) so builds succeed without depending on local untracked files.
+6. **Never** use multi-line `cat << 'EOF'` heredocs inside YAML `run: |` blocks; prefer clean single-line `echo` commands.

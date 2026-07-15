@@ -122,7 +122,19 @@
 - Migrated `isDailyNotificationEnabled`, `currentStreak`, and `lastActiveDate` to the cloud sync pipeline with a max-merge strategy for streaks (restoring highest streak from cloud).
 - Re-enqueued WorkManager on every app startup using the cached preferences.
 
+## 22. Remote CI/CD Failure: Missing `gradle-wrapper.jar` & Credentials on Linux Runner
+**Symptom**: GitHub Actions workflow fails in ~7 seconds (`exit code 1`) during `./gradlew assembleDebug assembleRelease` with `Class not found: org.gradle.wrapper.GradleWrapperMain` or `File google-services.json is missing`.
+**Root Cause**: `*.jar`, `google-services.json`, and `keystore.jks` were excluded by `.gitignore`. The CI runner checks out a repository without the Gradle wrapper `.jar` or required build/signing credentials.
+**Fix**: 
+1. Added `!gradle/wrapper/gradle-wrapper.jar` to `.gitignore` and committed the wrapper `.jar`.
+2. Added self-healing pre-build checks in `android-release.yml` to automatically inject repository secrets (`GOOGLE_SERVICES_JSON` / `RELEASE_KEYSTORE_BASE64`) or generate valid placeholders/temporary keystores on the fly using `keytool`.
+
+## 23. YAML Syntax Error: Heredoc (`EOF`) Indentation Conflict in `run: |`
+**Symptom**: `Invalid workflow file: .github/workflows/android-release.yml#L78 - You have an error in your yaml syntax on line 78`.
+**Root Cause**: Inside a YAML block literal (`run: |`), unindenting the closing `EOF` tag of a Bash heredoc (`cat << 'EOF' > ...`) to column 0 breaks YAML indentation rules, whereas indenting `EOF` breaks standard Bash heredoc termination rules.
+**Fix**: Replaced the multi-line `cat << 'EOF'` heredoc inside `android-release.yml` with a clean, single-line `echo '{"project_info":...}' > app/google-services.json` command.
+
 ---
 
 *EchoLogic — Brain off. Logic on. ⚡*
-*Last Updated: May 7, 2026 (Notifications, Streaks, & Icon)*
+*Last Updated: July 15, 2026 (Android CI/CD, Gradle Wrapper, & YAML Guardrails)*
