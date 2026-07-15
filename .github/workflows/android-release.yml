@@ -40,6 +40,56 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Ensure google-services.json exists
+        run: |
+          if [ ! -f app/google-services.json ]; then
+            if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+              echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+            else
+              echo "Creating placeholder google-services.json for CI build..."
+              cat << 'EOF' > app/google-services.json
+              {
+                "project_info": {
+                  "project_number": "123456789012",
+                  "project_id": "echologic-placeholder"
+                },
+                "client": [
+                  {
+                    "client_info": {
+                      "mobilesdk_app_id": "1:123456789012:android:abcdef0123456789",
+                      "android_client_info": {
+                        "package_name": "com.echologic.android"
+                      }
+                    },
+                    "oauth_client": [],
+                    "api_key": [
+                      {
+                        "current_key": "AIzaSyDummyKeyPlaceholderForCIBuild123456"
+                      }
+                    ],
+                    "services": {
+                      "appinvite_service": {
+                        "other_platform_oauth_client": []
+                      }
+                    }
+                  }
+                ]
+              }
+EOF
+            fi
+          fi
+
+      - name: Ensure release keystore exists
+        run: |
+          if [ ! -f app/keystore.jks ]; then
+            if [ -n "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" ]; then
+              echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
+            else
+              echo "Generating temporary release keystore for CI build..."
+              keytool -genkey -v -keystore app/keystore.jks -alias key -keyalg RSA -keysize 2048 -validity 10000 -storepass abcdefghi -keypass abcdefghi -dname "CN=EchoLogic, OU=Dev, O=EchoLogic, L=City, S=State, C=US"
+            fi
+          fi
+
       - name: Build Debug and Release APKs
         run: ./gradlew assembleDebug assembleRelease --stacktrace
 
